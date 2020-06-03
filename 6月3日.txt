@@ -1,0 +1,182 @@
+shoppingCart.jsp:
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>购物车界面</title>
+    <link rel="stylesheet" type="text/css" href="shoppingSystem.css" />
+</head>
+<body>
+<div id="container">
+    <div id="cartcontent">
+        <header id="header" class="wrap">
+            <p class="logo">AOA购物商城</p>
+            <hr>
+        </header>
+
+        <section id="main" class="wrap">
+            <br />
+            <h3 align="left">购物车：</h3>
+            <form method="post" action="shoppingList.jsp" target="_blank">
+                <table id="tbl" border="1px" >
+                    <tr>
+                        <th>选择</th>
+                        <th>商品信息</th>
+                        <th>单价</th>
+                        <th>数量</th>
+                        <th>金额</th>
+                        <th>操作</th>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="choice" value="高光"></td>
+                        <td>高光</td>
+                        <td>&yen;25.00</td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="choice" value="眼影"></td>
+                        <td>眼影</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="choice" value="口红"></td>
+                        <td>口红</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="choice" value="粉底"></td>
+                        <td>粉底</td>
+                    </tr>
+                    <tr>
+                        <td><input type="checkbox" name="choice" value="散粉"></td>
+                        <td>散粉</td>
+                    </tr>
+                </table>
+        </section>
+
+        <footer id="footer" class="wrap">
+            111
+        </footer>
+    </div>
+
+    <div id="payment">
+        已选商品：<input type="text" size="1"/>件
+        合计：<input type="text" />元
+        <input type="submit" value="结算" />
+        </form>
+    </div>
+</div>
+</body>
+</html>
+
+changePwd.jsp:
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>修改密码界面</title>
+    <link rel="stylesheet" type="text/css" href="shoppingSystem.css" />
+</head>
+<body>
+<p class="logo">AOA商城|重置登录密码</p>
+<p class="link"><a href="users.jsp">返回首页</a></p>
+<hr />
+<form name="changePwdForm" action="changePwd.jsp" method="post">
+    新的登陆密码：<input type="password" name="newpassword" /><br /><br />
+    确认新的登陆密码：<input type="password" name="verifynewpwd" /><br /><br />
+    <input type="submit" value="确认" />
+    <input type="reset" value="重置" />
+</form>
+</body>
+</html>
+
+shoppingList.jsp:
+%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@ page import="java.util.Vector" %>
+<html>
+<head>
+    <title>购物清单确认</title>
+</head>
+<body>
+<%
+    request.setCharacterEncoding("UTF-8");
+    //String username1=(String)session.getAttribute("userName1");
+    Vector goods=(Vector)session.getAttribute("shoppingList");
+    if(goods==null){
+        goods=new Vector();
+    }
+    String[] g=request.getParameterValues("choice");
+    if(g!=null){
+        for (int i=0;i<g.length;i++)
+            goods.add(g[i]);
+    }
+    session.setAttribute("shoppingList",goods);
+    //out.println("<br>您的姓名："+username1);
+    out.println("<br>请确认以下商品信息：<br>");
+    for(int j=0;j<goods.size();j++){
+        out.println(goods.get(j)+"<br>");
+    }
+%>
+<form>
+    <input type="submit" onclick=alert("购买成功！") value="确认">
+</form>
+</body>
+</html>
+
+shoppingSystem.css:
+@charset "utf-8";
+/* CSS Document */
+body{
+    text-align:center;
+    font-size:20px;
+}
+#container{
+
+}
+#cartcontent{
+
+}
+.wrap{
+    margin:0 auto;
+    width:80%;
+}
+#header{
+    height:80px;
+    background:white;
+}
+#main{
+    height:600px;
+    background:white;
+}
+#footer{
+    height:60px;
+    background:white;
+}
+
+#payment{
+    position:fixed;/*设置结算按钮固定在浏览器底端*/
+    top:92%;
+    left:10%;
+    width:80%;
+    height:80px;
+    background:grey;
+}
+#tbl{
+    border-collapse:separate;/*设置表格边框和单元格边框合并为一个单一边框*/
+    table-layout:auto;/*设置购物车表格中单元格宽度随内容改变*/
+    border:black solid 1px;/*设置表格边框*/
+    width:100%;
+    height:auto;
+}
+p{
+
+
+}
+p.logo{
+    text-align:left;
+    font-family:宋体，黑体，楷体;
+    font-weight:bolder;
+    font-size:36px;
+    color:#F90;
+}
+p.link{
+    text-align:right;
+}
