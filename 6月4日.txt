@@ -1,0 +1,41 @@
+今天主要是实现了数据库的连接以及注册新用户信息存储到数据库的功能：jsp+jdbc+javaBeans
+<%
+    request.setCharacterEncoding("utf8");
+    String username=request.getParameter("userName");
+    String password=request.getParameter("password");
+    String conpassword=request.getParameter("conPassword");
+    String truename=request.getParameter("trueName");
+    String sex=request.getParameter("sex");
+    String address=request.getParameter("address");
+    String tel=request.getParameter("tel");
+    String email=request.getParameter("email");
+    try{//装载驱动程序
+        Class.forName("com.mysql.jdbc.Driver").newInstance();
+        //创建连接
+        Connection con=java.sql.DriverManager.getConnection("jdbc:mysql://localhost:3306/webdatabase","root","123456");
+        //---使用PreparedStatement添加数据---//
+        PreparedStatement pstmt=con.prepareStatement("insert into my_users value (?,?,?,?,?,?,?,?)");
+        //显示ID号
+        ResultSet rst=pstmt.executeQuery("select ID from my_users;");
+        int id=0;
+        while (rst.next()){
+            id=rst.getInt("ID");
+        }
+        id++;
+        pstmt.setInt(1,id);
+        pstmt.setString(2,username);
+        pstmt.setString(3,password);
+        pstmt.setString(4,truename);
+        pstmt.setString(5,sex);
+        pstmt.setString(6,address);
+        pstmt.setString(7,tel);
+        pstmt.setString(8,email);
+        //执行插入数据操作
+        pstmt.execute();
+        pstmt.close();
+        //关闭连接、释放资源
+        con.close();
+    }catch (Exception e){
+        e.printStackTrace();
+    }
+%>
