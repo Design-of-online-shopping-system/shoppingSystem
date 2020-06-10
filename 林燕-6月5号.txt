@@ -1,0 +1,402 @@
+2020/6/5
+     今天用jsp+javaBeans+servlet模式（jsp主要展示页面；servlet充当控制器，负责接收客户端请求并处理请求；javaBean主要作用是数据处理、数据的维护），
+实现了用户注册信息同步到数据库的功能、注册信息显示到注册成功提醒页面以及用户登录时的判断密码是否正确
+有一点不足的是：注册信息保存到数据库，中文显示乱码问题
+      首先我创了2个package：common（里面有EncodingFilter.java过滤器，可以保持编码为utf8一致）、register
+      register下又有3个package：control（LoginServlet.java、RegisterServlet.java）、dao(UserDAO.java、UserDAOImpl.java)、model(User.java)
+以及web.xml的配置。
+EncodingFilter.java过滤器：
+package common;
+import java.io.IOException;
+import javax.servlet.*;
+
+public class EncodingFilter implements Filter {
+    public EncodingFilter(){
+
+    }
+    public void init(FilterConfig fConfig)throws ServletException{
+
+    }
+    public void doFilter(ServletRequest request,ServletResponse response,FilterChain chain)throws IOException,ServletException{
+        //设置request的编码方式
+        request.setCharacterEncoding("UTF-8");
+        response.setCharacterEncoding("UTF-8");
+        chain.doFilter(request,response);
+    }
+    public void destroy(){
+
+    }
+}
+
+User.java:
+package register.model;
+
+public class User {
+    private int id;
+    private String userName;
+    private String password;
+    private String trueName;
+    private String sex;
+    private String address;
+    private String tel;
+    private String email;
+    public int getId(){
+        return id;
+    }
+    public void setId(int id){
+        this.id=id;
+    }
+    public String getUserName(){
+        return userName;
+    }
+    public void setUserName(String userName){
+        this.userName=userName;
+    }
+    public String getPassword(){
+        return password;
+    }
+    public void setPassword(String password){
+        this.password=password;
+    }
+    public String getTrueName(){
+        return trueName;
+    }
+    public void setTrueName(String trueName){
+        this.trueName=trueName;
+    }
+    public String getSex(){
+        return sex;
+    }
+    public void setSex(String sex){
+        this.sex=sex;
+    }
+    public String getAddress(){
+        return address;
+    }
+    public void setAddress(String address){
+        this.address=address;
+    }
+    public String getTel(){
+        return tel;
+    }
+    public void setTel(String tel){
+        this.tel=tel;
+    }
+    public String getEmail(){
+        return email;
+    }
+    public void setEmail(String email){
+        this.email=email;
+    }
+    public String toString(){
+        return "用户名："+getUserName()+"<br>密码："+getPassword()+"<br>真实姓名："+getTrueName()+"<br>性别："+getSex()+"<br>联系地址："+getAddress()+"<br>联系电话："+getTel()+"<br>电子邮箱："+getEmail();
+    }
+}
+
+UserDAO.java：
+package register.dao;
+import register.model.User;
+public interface UserDAO {
+    public void saveUser(User user);//保存用户信息
+    public void updatePassword(String username,String newPassword);//更新用户
+    public void updateUser(String username,String newuserName,String truename,String sex,String tel,String address,String email);//更新用户信息
+    public int  haveId();//从数据库中查找最大id号
+    //public User[] listAllUser();//查找所有用户
+    //public User listUserById(int userId);//根据用户id查找指定用户
+    //public void deleteUser(int userId);//删除指定ID的用户
+    public boolean validate(String userName, String password);//登陆界面判断是否存在该用户以及密码是否正确
+}
+
+UserDAOImpl.java:
+package register.dao;
+import java.sql.*;
+
+import register.model.User;
+public class UserDAOImpl implements UserDAO {
+    private String dbClassName = "com.mysql.jdbc.Driver";
+    private String dbUrl = "jdbc:mysql://localhost:3306/webdatabase?useUnicode=true&characterEncoding=UTF-8&\"; // ?useUnicode=true&characterEncoding=UTF-8&";
+    private String dbUser = "root";
+    private String dbPwd = "123456";
+
+    public UserDAOImpl() {
+    }
+
+    //获取Connection对象
+    public Connection getConnection() {
+        Connection conn = null;
+        try {
+            Class.forName(dbClassName);
+            conn = DriverManager.getConnection(dbUrl, dbUser, dbPwd);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return conn;
+    }
+
+    //保存用户信息
+    public void saveUser(User user) {
+        Connection con = null;
+        PreparedStatement stmt = null;
+        try {
+            con = getConnection();
+            con.setAutoCommit(false);//将自动提交设为false
+            stmt = con.prepareStatement("insert into my_users(id, username, password, truename, sex, tel, address, email) value (?,?,?,?,?,?,?,?)");
+            stmt.setInt(1, user.getId());
+            stmt.setString(2, user.getUserName());
+            stmt.setString(3, user.getPassword());
+            stmt.setString(4, user.getTrueName());
+            stmt.setString(5, user.getSex());
+            stmt.setString(6, user.getAddress());
+            stmt.setString(7, user.getTel());
+            stmt.setString(8, user.getEmail());
+            stmt.execute();
+            con.commit();//提交
+        } catch (Exception e) {
+            try {
+                con.rollback();//回滚
+            } catch (SQLException sqlex) {
+                sqlex.printStackTrace();
+            }
+        } finally {
+            try {
+                stmt.close();
+                con.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //用户修改密码
+    public void updatePassword(String username, String newPassword) {
+        Connection con = null;
+        PreparedStatement stmt = null;
+        System.out.println("session对象获取的username：" + username);
+        System.out.println("newPassword:" + newPassword);
+        try {
+            con = getConnection();
+            con.setAutoCommit(false);//将自动提交设为false
+            stmt = con.prepareStatement("update my_users set passWord='" + newPassword + "' where userName='" + username + "'");
+            //stmt.setString(1,newPassword);
+            stmt.execute();
+            con.commit();//提交
+        } catch (Exception e) {
+            try {
+                con.rollback();
+            } catch (SQLException sqlex) {
+                sqlex.printStackTrace();
+            }
+        } finally {
+            try {
+                stmt.close();
+                con.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    //查找最大id号
+    public int haveId() {
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rst = null;
+        int id = 0;
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+            rst = stmt.executeQuery("select ID from my_users;");
+            rst.last();//移到最后一行
+            id = rst.getRow();//得到当前行数，也就是总行数
+            //System.out.println("运用getrow方法得到总函数："+id);
+            rst.close();
+            stmt.close();
+            conn.close();
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        id++;
+        //System.out.println("运用getrow方法得到总函数："+id);
+        return id;
+    }
+
+    //查找所有用户
+    //
+    //登陆界面判断是否存在该用户以及密码是否正确
+    public boolean validate(String userName, String passWord) {
+        boolean isValid = false;
+        Connection conn = null;
+        Statement stmt = null;
+        ResultSet rst1 = null;
+        ResultSet rst2 = null;
+        String username = "";
+        String password = "";
+        try {
+            conn = getConnection();
+            stmt = conn.createStatement();
+            rst1 = stmt.executeQuery("select * from my_users;");
+            while (rst1.next()) {
+                username = rst1.getString("username");
+                if (userName.equals(username)) {
+                    rst2 = stmt.executeQuery("select * from my_users where userName='" + userName + "'");
+                    if (rst2.next()) {
+                        password = rst2.getString("password");
+                    }
+                    if (password.equals(passWord)) {
+                        isValid = true;
+                    } else {
+                        isValid = false;
+                    }
+                }
+            }
+        } catch (SQLException sqlex) {
+            sqlex.printStackTrace();
+        } finally {
+            try {
+                rst1.close();
+                rst2.close();
+                stmt.close();
+                conn.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return isValid;
+    }
+
+    //更新用户x信息
+    public void updateUser(String username,String newuserName,String truename,String sex,String tel,String address,String email) {
+        Connection con = null;
+        PreparedStatement stmt = null;
+        try {
+            con = getConnection();
+            con.setAutoCommit(false);//设置自动提交为false
+            stmt = con.prepareStatement("update my_users set userName=?,trueName=?,sex=?,tel=?,address=?,email=? where userName='" + username+ "'");
+            stmt.setString(1,newuserName);
+            stmt.setString(2,truename);
+            stmt.setString(3,sex);
+            stmt.setString(4,tel);
+            stmt.setString(5,address);
+            stmt.setString(6,email);
+            stmt.execute();
+            con.commit();
+        }catch (Exception e) {
+            try {
+                con.rollback();
+            } catch (SQLException sqlex) {
+                sqlex.printStackTrace();
+            }
+        } finally {
+            try {
+                stmt.close();
+                con.close();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+    }
+}
+
+LoginServlet.java:
+package register.control;
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+import register.dao.UserDAO;
+import register.dao.UserDAOImpl;
+public class LoginServlet extends HttpServlet{
+    public void doPost(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        //从视图login.jsp读取请求参数
+        String userName=request.getParameter("username");
+        String password=request.getParameter("password");
+        String goForward;
+        //调用模型UserDAO，获取用户角色
+        UserDAO userDAO=new UserDAOImpl();
+        //调用validate函数，判断密码是否正确
+        boolean isValid=false;
+        isValid=userDAO.validate(userName,password);
+        if(isValid==true){
+            HttpSession session=request.getSession();
+            session.setAttribute("username",userName);
+            session.setAttribute("password",password);
+            goForward="users.jsp";
+        }else {
+            goForward="login.jsp?error=yes";
+        }
+        RequestDispatcher requestDispatcher=request.getRequestDispatcher(goForward);
+        requestDispatcher.forward(request,response);
+    }
+    public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        doPost(request,response);
+    }
+}
+
+RegisterServlet.java:
+package register.control;
+import java.io.IOException;
+import java.sql.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+import com.sun.corba.se.spi.protocol.RequestDispatcherDefault;
+import register.dao.UserDAO;
+import register.dao.UserDAOImpl;
+import register.model.User;
+public class RegisterServlet extends HttpServlet {
+    public void doPost(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        //模型对象生成
+        User userBean=new User();
+        UserDAO userDAO=new UserDAOImpl();
+        //从视图register.jsp中获取请求参数，并存放在实体模型中
+        int id=userDAO.haveId();
+        userBean.setId(id);
+        userBean.setUserName(request.getParameter("userName"));
+        userBean.setPassword(request.getParameter("password"));
+        userBean.setTrueName(request.getParameter("trueName"));
+        userBean.setSex(request.getParameter("sex"));
+        userBean.setAddress(request.getParameter("address"));
+        userBean.setTel(request.getParameter("tel"));
+        userBean.setEmail(request.getParameter("email"));
+        //调用业务模型，保存注册用户
+        userDAO.saveUser(userBean);
+        //将用户模型userBean存入request对象中，以便在视图文件regsuccess.jsp中展示注册信息
+        request.setAttribute("userBean",userBean);
+        //转发请求至注册成功提醒页regsuccess.jsp
+        RequestDispatcher requestDispatcher=request.getRequestDispatcher("regsuccess.jsp");
+        requestDispatcher.forward(request,response);//把请求转发至服务器上的另一资源
+    }
+    public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        doPost(request,response);
+    }
+}
+
+web.xml:
+<filter>
+        <filter-name>encodingFilter</filter-name>
+        <filter-class>common.EncodingFilter</filter-class>
+    </filter>
+    <filter-mapping>
+        <filter-name>encodingFilter</filter-name>
+        <url-pattern>/*</url-pattern>
+    </filter-mapping>
+
+    <servlet>
+        <servlet-name>loginServlet</servlet-name>
+        <servlet-class>register.control.LoginServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>loginServlet</servlet-name>
+        <url-pattern>/login</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>registerServlet</servlet-name>
+        <servlet-class>register.control.RegisterServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>registerServlet</servlet-name>
+        <url-pattern>/register</url-pattern>
+    </servlet-mapping>

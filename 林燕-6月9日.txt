@@ -1,0 +1,190 @@
+2020/6/9
+1.完成用户信息的修改和密码修改，要使用session对象存储、获取用户的登陆信息
+Servlet中使用session：
+在JSP页面上可直接通过session.setAttribute(name,object)设置session,
+可如果想在servlet使用session 的话，就和在JSP有点区别了。
+在servlet中通过HttpSession session=request.getSession(boolean create);
+得到一个session对象（准确来说，得到的应该是一个HttpSession 对象），
+然后，就可以像在JSP页面中直接使用它了。
+（参数Boolean create说明:如果当前请求不属于任何会话，而且create参数为true，
+则创建一个会话，否则返回null.
+当然如果为false的时候，那就和不带参数的HttpSession session=request.getSession();等价了。）
+ChangeMes.jsp:
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>修改用户个人信息</title>
+    <link rel="stylesheet" type="text/css" href="loginAndregisterAchang.css" />
+
+</head>
+<body background="images/背景图6.jpg">
+<p class="logo">AOA商城|修改用户信息</p>
+<div>
+    <p>Registration Page</p>
+    <center>
+        <form name="changeMesForm" action="changeMes" method="post">
+            <table border="0">
+                <tr>
+                    <td>用户名：</td>
+                    <td><input type="text" name="newuserName"></td>
+                </tr>
+                <tr>
+                    <td>真实姓名：</td>
+                    <td><input type="text" name="trueName"></td>
+                </tr>
+                <tr>
+                    <td>性别：</td>
+                    <td><input type="radio" name="sex" value="女" />女
+                        <input type="radio" name="sex" value="男" />男</td>
+                </tr>
+                <tr>
+                    <td>联系地址：</td>
+                    <td><input type="text" name="address"></td>
+                </tr>
+                <tr>
+                    <td>联系电话：</td>
+                    <td><input type="text" name="tel"></td>
+                </tr>
+                <tr>
+                    <td>电子邮箱：</td>
+                    <td><input type="text" name="email"></td>
+                </tr>
+            </table>
+            <br>
+            <input type="submit" value="确定修改">
+            <input type="reset" value="重置">
+
+        </form>
+        <a href="users.jsp">暂时不修改</a>
+    </center>
+</div>
+</body>
+</html>
+
+ChangePwd.jsp:
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+<head>
+    <title>修改密码界面</title>
+    <link rel="stylesheet" type="text/css" href="loginAndregisterAchang.css" />
+    <script language="JavaScript">
+        function validateform() {
+            var reason="";
+            reason+=validatePassword(document.changePwdForm.newpassword,document.changePwdForm.renewpassword);
+            if(reason!=""){
+                alert("输入有误：\n"+reason);
+                return false;
+            }else {
+                return true;
+            }
+        }
+        //判断密码和重复密码是否一致
+        function validatePassword(fld1,fld2) {
+            var error="";
+            if(fld1.value!=fld2.value){
+                error="重复密码与你输入的密码不一致！\n";
+            }
+            return error;
+        }
+    </script>
+</head>
+
+<body background="images/背景图7.jpg">
+<p class="logo">AOA商城|重置登录密码</p>
+<hr />
+<div>
+    <p>Change Password</p>
+<form onsubmit="return validateform();" name="changePwdForm" action="changePwd" method="post">
+    新的登陆密码：<input type="password" name="newpassword" /><br /><br />
+    确认新的登陆密码：<input type="password" name="renewpassword" /><br /><br />
+    <input type="submit" value="确认" class="bton" />
+    <input type="reset" value="重置" class="bton"/>
+    <p class="link"><a href="users.jsp">返回首页</a></p>
+</form>
+</div>
+</body>
+</html>
+
+ChangeMesServlet.java:
+package register.control;
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+import register.dao.UserDAO;
+import register.dao.UserDAOImpl;
+public class ChangeMesServlet extends HttpServlet{
+    public void doPost(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        //从changeMes.jsp页面读取数据
+        String newuserName=request.getParameter("newuserName");
+        String truename=request.getParameter("trueName");
+        String sex=request.getParameter("sex");
+        String tel=request.getParameter("tel");
+        String address=request.getParameter("address");
+        String email=request.getParameter("email");
+        //获得session对象里的username
+        HttpSession session=request.getSession();
+        String username=null;
+        username=(String)session.getAttribute("username");
+        //调用模型UserDAO，获取用户角色
+        UserDAO userDAO=new UserDAOImpl();
+        //调用updateUser(String username,String newuserName,String truename,String sex,String tel,String address,String email)函数
+        userDAO.updateUser(username,newuserName,truename,sex,tel,address,email);
+        //
+        RequestDispatcher requestDispatcher=request.getRequestDispatcher("login.jsp?changeMes=yes");
+        requestDispatcher.forward(request,response);
+    }
+    public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        doPost(request,response);
+    }
+
+}
+
+ChangePwdServlet.java:
+package register.control;
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+import register.dao.UserDAO;
+import register.dao.UserDAOImpl;
+public class ChangePwdServlet extends HttpServlet{
+    public void doPost(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        //从changePwd.jsp页面读取数据
+        String oldpassword=request.getParameter("oldpassword");
+        String newpassword=request.getParameter("newpassword");
+        String renewpassword=request.getParameter("renewpassword");
+        //获得session对象里的username
+        HttpSession session=request.getSession();
+        String username=null;
+        username=(String)session.getAttribute("username");
+        //调用模型UserDAO，获取用户角色
+        UserDAO userDAO=new UserDAOImpl();
+        //调用updateUser(String username,String newPassword)函数
+        userDAO.updatePassword(username,newpassword);
+        //
+        RequestDispatcher requestDispatcher=request.getRequestDispatcher("login.jsp?changePwd=yes");
+        requestDispatcher.forward(request,response);
+    }
+    public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        doPost(request,response);
+    }
+}
+
+web.xml配置：
+<servlet>
+        <servlet-name>changePwdServlet</servlet-name>
+        <servlet-class>register.control.ChangePwdServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>changePwdServlet</servlet-name>
+        <url-pattern>/changePwd</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>changeMesServlet</servlet-name>
+        <servlet-class>register.control.ChangeMesServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>changeMesServlet</servlet-name>
+        <url-pattern>/changeMes</url-pattern>
+    </servlet-mapping>

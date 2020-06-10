@@ -1,0 +1,543 @@
+2020/6/6-2020/6/7
+周末这两天我完成了游客界面、用户界面的设计，但是没有实现展示最新商品的功能。
+tourists.jsp:
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<html>
+  <head>
+    <title>游客界面</title>
+    <link rel="stylesheet" type="text/css" href="salePage.css" />
+    <script type="text/javascript">
+      window.onload=function(){
+        var menu=document.getElementById("zuo").getElementsByClassName("menu");
+        for(i=0;i<menu.length;i++){
+          //鼠标移到导航条菜单项上时显示二级菜单并设置一级菜单和二级菜单样式
+          menu[i].onmouseover=function(){
+            this.style.background="white";
+            var lis=this.getElementsByTagName("ul")[0].getElementsByTagName("li");
+            this.getElementsByTagName("ul")[0].style.display="block";//显示二级菜单
+            this.getElementsByTagName("ul")[0].style.width="100px";//设置二级菜单宽度
+            this.getElementsByTagName("ul")[0].style.position="absolute";//绝对定位二级菜单
+            for(var i=0;i<lis.length;i++){
+              lis[i].onmouseover=function(){//鼠标移到二级菜单项上时背景颜色修改为粉色
+                this.style.background="pink";
+              }
+              lis[i].onmouseout=function(){//鼠标移出二级菜单项上时背景颜色修改为白色
+                this.style.background="white";
+              }
+            }
+          }
+          //鼠标移出导航条菜单项上时隐藏二级菜单项，并修改一级菜单项的背景颜色
+          menu[i].onmouseout=function(){
+            this.style.background="#c6f";
+            this.getElementsByTagName("ul")[0].style.display="none";
+          }
+        }
+      }
+
+    </script>
+  </head>
+  <body background="images/3.jpg">
+  <header id="header" class="wrap">
+    <div id="logo">
+      <p>AOA购物商城</p>
+    </div>
+    <nav>
+      <ul>
+        <li><a href="login.jsp">亲，请登陆</a>&nbsp;&nbsp;</li>
+        <li><a href="registers.jsp">免费注册</a>&nbsp;&nbsp;</li>
+        <li><a href="#">新闻中心</a>&nbsp;&nbsp;</li>
+        <li><a href="#">联系我们</a></li>
+      </ul>
+    </nav>
+    <div id="reserch">
+      <form action="#" target="_blank">
+        <input type="text" size="80px" />
+        <input type="button" value="搜索" />
+      </form>
+    </div>
+  </header>
+  <section id="main" class="wrap">
+    <div id="content" class="wrap clearfix">
+      <aside>
+        <div id="zuo">
+          <ul>
+            <li class="menu">服装
+              <ul class="subMenu">
+                <li><a href="#">精品女装</a></li>
+                <li><a href="#">新款男装</a></li>
+                <li><a href="#">时尚女鞋</a></li>
+                <li class="last"><a href="#">潮流T恤</a></li>
+              </ul>
+            </li>
+            <li class="menu">家电
+              <ul class="subMenu">
+                <li><a href="#">生活电器</a></li>
+                <li><a href="#">厨房电器</a></li>
+                <li><a href="#">个人护理</a></li>
+                <li class="last"><a href="#">数码</a></li>
+              </ul>
+            </li>
+            <li class="menu">家具
+              <ul class="subMenu">
+                <li><a href="#">家饰</a></li>
+                <li><a href="#">家纺</a></li>
+                <li><a href="#">床上用品</a></li>
+                <li class="last"><a href="#">布艺软饰</a></li>
+              </ul>
+            </li>
+            <li class="menu">美食
+              <ul class="subMenu">
+                <li><a href="#">零食</a></li>
+                <li><a href="#">生鲜</a></li>
+                <li><a href="#">水果</a></li>
+                <li class="last"><a href="#">面包</a></li>
+              </ul>
+            </li>
+            <li class="menu">学习
+              <ul class="subMenu">
+                <li><a href="#">书籍</a></li>
+                <li><a href="#">书桌</a></li>
+                <li><a href="#">学习用具</a></li>
+                <li class="last"><a href="#">学习机</a></li>
+              </ul>
+            </li>
+            <li class="menu">办公
+              <ul class="subMenu">
+                <li><a href="#">打印机</a></li>
+                <li><a href="#">投影机</a></li>
+                <li><a href="#">碎纸机</a></li>
+                <li class="last"><a href="#">保险箱</a></li>
+              </ul>
+            </li>
+            <li class="menu">鲜花</li>
+            <li class="menu">美妆</li>
+            <li class="menu">百货</li>
+            <li class="menu">手机</li>
+            <li class="menu">珠宝</li>
+            <li class="menu">汽车</li>
+          </ul>
+        </div>
+      </aside>
+      <article>
+        <br />
+        <form name="shoppingForm" method="post" action="login.jsp">
+          <table id="tbl" border="0px" >
+            <tr>
+              <th>图片</th>
+              <th>商品信息</th>
+              <th>单价</th>
+              <th>操作</th>
+            </tr>
+            <tr>
+              <td><img src="images/商品1.jpg" width="100" height="100" title="Java Web项目开发全程实录"/></td>
+              <td>Java Web项目开发全程实录</td>
+              <td width="100">&yen;59.00</td>
+              <td><input type="submit" value="+购物车"></td>
+            </tr>
+            <tr>
+              <td><img src="images/商品2.jpg" width="100" height="100" title="新款流行裙子" /></td>
+              <td>新款流行裙子</td>
+              <td>&yen;156.00</td>
+              <td><input type="submit" value="+购物车"></td>
+            </tr>
+            <tr>
+              <td><img src="images/商品3.jpg" width="100" height="100" title="遮阳伞" /> </td>
+              <td>遮阳伞</td>
+              <td>&yen;31.00</td>
+              <td><input type="submit" value="+购物车"></td>
+            </tr>
+            <tr>
+              <td><img src="images/商品4.jpg" width="100" height="100" title="新鲜面包" /> </td>
+              <td>新鲜面包</td>
+              <td>&yen;12.00</td>
+              <td><input type="submit" value="+购物车"></td>
+            </tr>
+            <tr>
+              <td><img src="images/商品5.jpg" width="100" height="100" title="防晒霜" /> </td>
+              <td>防晒霜</td>
+              <td>&yen;25.00</td>
+              <td><input type="submit" value="+购物车"></td>
+            </tr>
+            <tr>
+              <td><img src="images/商品6.jpg" width="100" height="100" title="PERFECT DIARY口红" /> </td>
+              <td>PERFECT DIARY口红</td>
+              <td>&yen;79.00</td>
+              <td><input type="submit" value="+购物车"></td>
+            </tr>
+          </table>
+        </form>
+      </article>
+    </div>
+  </section>
+  <footer id="footer" class="wrap">
+    <p>AOA商城欢迎您的到来！</p>
+  </footer>
+  </body>
+</html>
+
+users.jsp:
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+<%@page pageEncoding="utf-8" %>
+<%@page import="buy.product"%>
+<%@page import="buy.Product_clo"%>
+<%@page import="java.sql.*"%>
+<%@page import="java.util.*"%>
+<html>
+<head>
+    <title>用户界面</title>
+    <link rel="stylesheet" type="text/css" href="salePage.css" />
+    <script type="text/javascript">
+        window.onload=function(){
+            var menu=document.getElementById("zuo").getElementsByClassName("menu");
+            for(i=0;i<menu.length;i++){
+                //鼠标移到导航条菜单项上时显示二级菜单并设置一级菜单和二级菜单样式
+                menu[i].onmouseover=function(){
+                    this.style.background="white";
+                    var lis=this.getElementsByTagName("ul")[0].getElementsByTagName("li");
+                    this.getElementsByTagName("ul")[0].style.display="block";//显示二级菜单
+                    this.getElementsByTagName("ul")[0].style.width="100px";//设置二级菜单宽度
+                    this.getElementsByTagName("ul")[0].style.position="absolute";//绝对定位二级菜单
+                    for(var i=0;i<lis.length;i++){
+                        lis[i].onmouseover=function(){//鼠标移到二级菜单项上时背景颜色修改为粉色
+                            this.style.background="pink";
+                        }
+                        lis[i].onmouseout=function(){//鼠标移出二级菜单项上时背景颜色修改为白色
+                            this.style.background="white";
+                        }
+                    }
+                }
+                //鼠标移出导航条菜单项上时隐藏二级菜单项，并修改一级菜单项的背景颜色
+                menu[i].onmouseout=function(){
+                    this.style.background="#c6f";
+                    this.getElementsByTagName("ul")[0].style.display="none";
+                }
+            }
+        }
+        window.onload=function(){
+            var menu=document.getElementById("nav1").getElementsByClassName("menu1");
+            for(i=0;i<menu.length;i++){
+                //鼠标移到导航条菜单项上时显示二级菜单并设置一级菜单和二级菜单样式
+                menu[i].onmouseover=function(){
+                    this.style.background="#c6f";
+                    var lis=this.getElementsByTagName("ul")[0].getElementsByTagName("li");
+                    this.getElementsByTagName("ul")[0].style.display="block";//显示二级菜单
+                    this.getElementsByTagName("ul")[0].style.width="120px";//设置二级菜单宽度
+                    this.getElementsByTagName("ul")[0].style.position="absolute";//绝对定位二级菜单
+                    for(var i=0;i<lis.length;i++){
+                        lis[i].onmouseover=function(){//鼠标移到二级菜单项上时背景颜色修改为粉色
+                            this.style.background="pink";
+                        }
+                        lis[i].onmouseout=function(){//鼠标移出二级菜单项上时背景颜色修改为白色
+                            this.style.background="white";
+                        }
+                    }
+                }
+                //鼠标移出导航条菜单项上时隐藏二级菜单项，并修改一级菜单项的背景颜色
+                menu[i].onmouseout=function(){
+                    this.style.background="white";
+                    this.getElementsByTagName("ul")[0].style.display="none";
+                }
+            }
+        }
+    </script>
+</head>
+<body background="images/3.jpg">
+<jsp:useBean id="db" scope="application" class="buy.DataBaseConnection"></jsp:useBean>
+<header id="header" class="wrap">
+    <div id="logo">
+        <p>AOA购物商城</p>
+    </div>
+    <div id="nav1">
+        <ul>
+            <li class="menu1">用户中心</a>
+                <ul class="subMenu1">
+                    <li><a href="changeMes.jsp">修改个人信息</a></li>
+                    <li><a href="changePwd.jsp">修改密码</a></li>
+                    <li><a href="login.jsp">退出登录</a></li>
+                </ul>
+            </li>
+            <li class="menu1"><a href="shoppingCart.jsp">购物车</a></li>
+            <li class="menu1"><a href="news.jsp">新闻中心</a></li>
+            <li class="menu1"><a href="#">联系我们</a></li>
+        </ul>
+    </div>
+    <div id="reserch">
+        <form action="#" target="_blank">
+            <input type="text" size="80px" />
+            <input type="button" value="搜索" />
+        </form>
+    </div>
+</header>
+<section id="main" class="wrap">
+    <div id="content" class="wrap clearfix">
+        <aside>
+            <div id="zuo">
+                <ul>
+                    <li class="menu">服装
+                        <ul class="subMenu">
+                            <li><a href="#">精品女装</a></li>
+                            <li><a href="#">新款男装</a></li>
+                            <li><a href="#">时尚女鞋</a></li>
+                            <li class="last"><a href="#">潮流T恤</a></li>
+                        </ul>
+                    </li>
+                    <li class="menu">家电
+                        <ul class="subMenu">
+                            <li><a href="#">生活电器</a></li>
+                            <li><a href="#">厨房电器</a></li>
+                            <li><a href="#">个人护理</a></li>
+                            <li class="last"><a href="#">数码</a></li>
+                        </ul>
+                    </li>
+                    <li class="menu">家具
+                        <ul class="subMenu">
+                            <li><a href="#">家饰</a></li>
+                            <li><a href="#">家纺</a></li>
+                            <li><a href="#">床上用品</a></li>
+                            <li class="last"><a href="#">布艺软饰</a></li>
+                        </ul>
+                    </li>
+                    <li class="menu">美食
+                        <ul class="subMenu">
+                            <li><a href="#">零食</a></li>
+                            <li><a href="#">生鲜</a></li>
+                            <li><a href="#">水果</a></li>
+                            <li class="last"><a href="#">面包</a></li>
+                        </ul>
+                    </li>
+                    <li class="menu">学习
+                        <ul class="subMenu">
+                            <li><a href="#">书籍</a></li>
+                            <li><a href="#">书桌</a></li>
+                            <li><a href="#">学习用具</a></li>
+                            <li class="last"><a href="#">学习机</a></li>
+                        </ul>
+                    </li>
+                    <li class="menu">办公
+                        <ul class="subMenu">
+                            <li><a href="#">打印机</a></li>
+                            <li><a href="#">投影机</a></li>
+                            <li><a href="#">碎纸机</a></li>
+                            <li class="last"><a href="#">保险箱</a></li>
+                        </ul>
+                    </li>
+                    <li class="menu">鲜花</li>
+                    <li class="menu">美妆</li>
+                    <li class="menu">百货</li>
+                    <li class="menu">手机</li>
+                    <li class="menu">珠宝</li>
+                    <li class="menu">汽车</li>
+                </ul>
+            </div>
+        </aside>
+        <article>
+            <br />
+            <form action="add" method="post">
+                <table>
+                    <tr>
+                        <th>图片</th>
+                        <th>商品信息</th>
+                        <th>单价</th>
+                        <th>数量</th>
+                        <th>操作</th>
+                    </tr>
+                    <tr>
+                        <!-- 遍历商品全部信息 -->
+                        <%
+                            String name,picture;
+                            int price, quantity;
+                            int id;
+                            Product_clo clo = new Product_clo();
+                            ArrayList<product> list = clo.getAllProduct();
+                            if (list != null && list.size() > 0) {
+                                for (int i = 0; i < list.size(); i++) {
+                                    product pro = list.get(i);
+                                    id = pro.getId();
+                                    picture=pro.getPicture();
+                                    name = pro.getName();
+                                    price = pro.getPrice();
+                                    quantity = pro.getQuantity();
+                        %>
+                        <td><img src="<%=picture%>" width="100" height="100"></td>
+                        <td><%=name%></td>
+                        <td width="50">&yen;<%=price%></td>
+                        <td width="50"><%=quantity%></td>
+                        <td><a href="add?id=<%=id%>&picture=<%=picture%>&name=<%=name%>&price=<%=price%>&quantity=<%=quantity%>"> 加入购物车</a></td>
+                    </tr>
+                    <%
+                            }
+                        }
+                    %>
+                </table>
+                <br>
+            </form>
+        </article>
+    </div>
+</section>
+<footer id="footer" class="wrap">
+    <p>AOA商城欢迎您的到来！</p>
+</footer>
+</body>
+</html>
+
+salePage.css:
+@charset "utf-8";
+/* CSS Document */
+body{
+    background-repeat:no-repeat;
+    background-size:cover;
+    text-align:center;
+    font-size:20px;
+}
+.wrap{
+    margin:0 auto;
+    width:80%;
+}
+#header{
+    height:100px;
+    background:white;
+}
+#main{
+    height:800px;;
+    background:white;
+}
+#footer{
+    height:50px;
+    background:white;
+    font-family:Verdana, Geneva, sans-serif;
+    font-size:25px;
+    font-weight:bold;
+    text-align:center;
+    color:#C3F;
+}
+/*设置logo最外层的div样式*/
+#logo{
+    text-align:left;
+    font-family:宋体，黑体，楷体;
+    font-weight:bolder;
+    font-size:36px;
+    color:#90F;
+    width:230px;
+    height:32px;
+    float:left;
+    margin:0px;
+    padding:0px;
+}
+/*导航条样式设置*/
+nav{
+    margin:0;
+    width:610px;
+    height:40px;
+    font-size:14px;
+    padding-top:12px;
+    float:right;
+}
+/*设置无序列表样式*/
+nav li{
+    display:inline;
+    list-style-type:none;
+}
+/*设置超链接悬停状态的样式*/
+a:link{
+    color:#000;
+    text-decoration:none;
+}
+a:hover{
+    font-family:"宋体";
+    color:#60F;
+    text-decoration:none;
+}
+/*搜素框*/
+#reserch{
+    margin:0px;
+    padding-top:60px;
+    padding-left:150px;
+}
+/*中间主要内容*/
+#content{
+    margin-top:12px;/*设置网页内容与页眉之间的间距*/
+}
+aside{/*左侧边栏*/
+    float:left;
+    width:300px;
+    margin:0px;
+    margin-top:10px;
+    padding:0px;
+    border:1px solid grey;
+    background:#C6F;
+    font-family:Verdana, Geneva, sans-serif;
+}
+article{/*右侧边栏*/
+    float:right;
+    padding:0;
+    margin:0 0 0 20px;
+}
+/*使用伪元属解决左右两栏浮动后#content父元素高度自适应问题*/
+.clearFix:after{
+    content:"";
+    display:block;
+    clear:both;
+}
+/*左侧边栏无序列表*/
+#zuo{
+    width:100px;
+    height:300px;
+    margin:0px;
+    padding:10px 0px;
+
+}
+.menu{
+    position:relative;/*设置相对定位，便于二级菜单对它进行绝对定位*/
+    float:left;
+    width:100px;
+    height:36px;
+    line-height:36px;
+    text-align:center;
+    list-style-type:square;
+    border:1px solid white;
+}
+.subMenu{
+    display:none;/*使用CSS代码设置二级菜单默认隐藏效果*/
+    position:absolute;
+    border:1px solid #ccc;
+    list-style-type:none;
+    top:0px;
+    left:100px;
+    width:100px;
+}
+li.last{
+    border-bottom:0px;
+    /*覆盖前面.subMenu li选择器设置的下边框线样式，使最后一个列表项的下边框线不显示*/
+}
+#zuo ul li:hover ul{
+    display:block;
+}
+#nav1{
+    width:500px;
+    height:36px;
+    background:white;
+    float:right;
+}
+
+.menu1{
+    position:relative;/*设置相对定位，便于二级菜单对它进行绝对定位*/
+    float:right;
+    width:100px;
+    height:36px;
+    line-height:36px;
+    text-align:center;
+    font-size:14px;
+    list-style-type:none;
+}
+.subMenu1{
+    display:none;/*使用CSS代码设置二级菜单默认隐藏效果*/
+    border:1px solid #ccc;
+    list-style-type:none;
+}
+li.last {
+    border-bottom: 0px;
+    /*覆盖前面.subMenu li选择器设置的下边框线样式，使最后一个列表项的下边框线不显示*/
+}
+td{
+    text-align: center;
+}

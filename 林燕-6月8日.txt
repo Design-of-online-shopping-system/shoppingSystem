@@ -1,0 +1,513 @@
+2020/6/8
+今天解决了购物页面点击“加入购物车”将商品添加到购物车的功能以及同步保存到数据库，
+还有清空购物车、删除购物车里的商品、计算总金额等功能。
+为方便实现，我又建立了一个my_shopcart数据库表，用来存被加入购物车的商品信息，以及方便商品库存的管理
+1个package：buy（AddServlet.java、ClearServlet.java、DeleteServlet.java、UpdateServlet.java、product.java、product_clo.java、ShoppingDAO.java、ShoppingDAOImpl.java）
+
+但是发现将商品数据保存到数据库还是发生中文乱码问题，于是百度采用了许多办法，最终
+在连接数据库时，String url = "jdbc:mysql://localhost:3306/bookstort
+?useUnicode=true&characterEncoding=UTF-8&"; // ?useUnicode=true&characterEncoding=UTF-8&"
+这个代码就是解决传入数据库时中文会乱码的核心。
+
+解决了这个问题发现，每个用户的购物车都是一致的，还应该做到每个用户有自己专属的购物车
+product.java:
+package buy;
+//商品类
+public class product {
+    private int id;//商品编号
+    private String picture;//商品图片
+    private String name;//商品名称
+    private int price;//商品价格
+    private int quantity;//商品库存
+    private String type;//商品类型
+
+    private int num;//购买同一件商品的数量
+    private int totalprice;//购买同款商品的总价格
+    public int getTotalprice() {
+        return totalprice;
+    }
+    public void setTotalprice(int totalprice) {
+        this.totalprice = totalprice;
+    }
+    public int getNum() {
+        return num;
+    }
+    public void setNum(int num) {
+        this.num = num;
+    }
+    public int getId() {
+        return id;
+    }
+    public void setId(int id) {
+        this.id = id;
+    }
+    public String getName() {
+        return name;
+    }
+    public void setName(String name) {
+        this.name = name;
+    }
+    public int getPrice() {
+        return price;
+    }
+    public void setPrice(int price) {
+        this.price = price;
+    }
+    public String getType() {
+        return type;
+    }
+    public void setType(String type) {
+        this.type = type;
+    }
+    public int getQuantity() {
+        return quantity;
+    }
+    public void setQuantity(int quantity) {
+        this.quantity = quantity;
+    }
+    public String getPicture() {
+        return picture;
+    }
+    public void setPicture(String picture) {
+        this.picture = picture;
+    }
+}
+product_clo.java:
+package buy;
+
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+
+public class Product_clo {
+    ArrayList<Integer> list = new ArrayList<Integer>();
+    // 获得所有商品的全部信息
+    public ArrayList<product> getAllProduct() {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        ArrayList<product> list = new ArrayList<product>();// 把商品信息放列表里
+        try {
+            conn = DataBaseConnection.getConnection();
+            String sql = "select * from my_goods;";
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                product product = new product();
+                product.setId(rs.getInt("ID"));
+                product.setPicture(rs.getString("Picture"));
+                product.setName(rs.getString("Name"));
+                product.setPrice(rs.getInt("Price"));
+                product.setQuantity(rs.getInt("Count"));
+                product.setType(rs.getString("Type"));
+                list.add(product);// 把一个商品的所有信息加入列表
+            }
+            return list;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        } finally {
+            // 释放数据集对象
+            if (rs!=null) {
+                try {
+                    rs.close();
+                    rs = null;
+                } catch (Exception ex) {
+                    // TODO: handle exception
+                    ex.printStackTrace();
+                }
+            }
+            // 释放语句对象
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                    stmt = null;
+                } catch (Exception ex) {
+                    // TODO: handle exception
+                    ex.printStackTrace();
+                }
+            }
+        }
+    }
+    // 获取购物车商品的id
+    public ArrayList<Integer> getCartId() {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        try {
+            conn = DataBaseConnection.getConnection();
+            String sql = "select goodsID from my_shopcart;";// SQL语句
+            stmt = conn.prepareStatement(sql);
+            rs = stmt.executeQuery();
+            while (rs.next()) {
+                list.add(rs.getInt(1));// 把一个商品的所有信息加入列表
+            }
+            return list;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return null;
+        } finally {
+            // 释放数据集对象
+            if (rs != null) {
+                try {
+                    rs.close();
+                    rs = null;
+                } catch (Exception ex) {
+                    // TODO: handle exception
+                    ex.printStackTrace();
+                }
+            }
+            // 释放语句对象
+            if (stmt != null) {
+                try {
+                    stmt.close();
+                    stmt = null;
+                } catch (Exception ex) {
+                    // TODO: handle exception
+                    ex.printStackTrace();
+                }
+            }
+        }
+
+    }
+    private PreparedStatement setInt(int i, int j) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    private PreparedStatement setString(int i, String name) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+}
+ShoppingDAO.java:
+package buy;
+
+public interface ShoppingDAO {
+    public void add(int catrid,int proid,String propicture,String proname,int proprice);//添加商品到购物车
+    public void delete(int proid);//将商品从购物车删除
+    public void update(int proid,int pronum,int proprice);//更新商品库存
+    public void clear();//清空购物车
+}
+
+ShoppingDAOImpl.java:
+package buy;
+import java.sql.*;
+import java.util.*;
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+import buy.product;
+import buy.Product_clo;
+public class ShoppingDAOImpl implements ShoppingDAO{
+    private String dbClassName="com.mysql.jdbc.Driver";
+    private String dbUrl="jdbc:mysql://localhost:3306/webdatabase?useUnicode=true&characterEncoding=UTF-8&\"; // ?useUnicode=true&characterEncoding=UTF-8&";
+    private String dbUser="root";
+    private String dbPwd="123456";
+    //获取Connection对象
+    public Connection getConnection(){
+        Connection conn=null;
+        try{
+            Class.forName(dbClassName);
+            conn=DriverManager.getConnection(dbUrl,dbUser,dbPwd);
+        }catch (ClassNotFoundException e){
+            e.printStackTrace();
+        }catch (SQLException e){
+            e.printStackTrace();
+        }
+        return conn;
+    }
+    public void ShoppingDAOImpl(){
+
+    }
+    //添加商品到购物车
+    public void add(int cartid,int proid,String propicture,String proname,int proprice) {
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Product_clo clo = new Product_clo();
+        String sql = null;
+        ArrayList<Integer> list = new ArrayList();
+        //System.out.println("cartid:"+cartid+" proid:"+proid+" propicture:"+propicture+" proname:"+proname+" proprice:"+proprice);
+        try {
+            conn = getConnection();
+            conn.setAutoCommit(false);//将自动提交设为false
+            //将所选商品加入购物车表中
+            list = clo.getCartId();//链表存的是购物车商品的id
+            int num = 0;
+            int totalprice = 0;
+            int price = 0;
+            if (list.contains(proid)) {//如果链表里有，那说明该商品已经存在于购物车，在数量上加1即可
+                //得先从购物车把该商品id的相关的数量和价格查询出来
+                sql = "select goodsPrice,cartgoodsCount from my_shopcart where goodsID=" + proid;
+                stmt = conn.prepareStatement(sql);
+                rs = stmt.executeQuery(sql);
+                while (rs.next()) {
+                    price = rs.getInt(1);
+                    num = rs.getInt(2);
+                }
+                num = num + 1;//再此基础上加1
+                totalprice = price * num;//更新该商品的总价
+                sql = "update my_shopcart set cartgoodsCount = ?, totalPrice = ?  where goodsID=?;";
+                stmt = conn.prepareStatement(sql);
+                stmt.setInt(1, num);
+                stmt.setInt(2, totalprice);
+                stmt.setInt(3, proid);
+                stmt.executeUpdate();
+                conn.commit();//提交
+                stmt.close();
+                conn.close();
+            } else {//购物车匹配不到该商品则直接插入
+                sql = "insert into my_shopcart(cartID,goodsID,goodsPicture,goodsName,goodsPrice,cartgoodsCount,totalPrice) values(?,?,?,?,?,?,?);";
+                stmt = conn.prepareStatement(sql);
+                stmt.setInt(1,cartid);
+                stmt.setInt(2, proid);
+                stmt.setString(3, propicture);
+                stmt.setString(4, proname);
+                stmt.setInt(5, proprice);
+                stmt.setInt(6, 1);
+                stmt.setInt(7, proprice);
+                stmt.executeUpdate();
+                conn.commit();//提交
+                stmt.close();
+                conn.close();
+            }
+        }catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+    //将商品从购物车删除
+    public void delete(int proid){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Product_clo clo = new Product_clo();
+        String sql = null;
+        ArrayList<Integer> list = new ArrayList();
+        try{
+            conn = getConnection();
+            conn.setAutoCommit(false);//将自动提交设为false
+            int id = proid;
+            sql = "delete from my_shopcart where goodsID=?;";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, id);
+            stmt.executeUpdate();
+            conn.commit();//提交
+            stmt.close();
+            conn.close();
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    //在购物车中修改商品数量
+    public void update(int proid,int pronum,int proprice){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Product_clo clo = new Product_clo();
+        String sql = null;
+        ArrayList<Integer> list = new ArrayList();
+        try{
+            conn = getConnection();
+            conn.setAutoCommit(false);//将自动提交设为false
+            int totalprice = 0;
+            int total = 0;
+            int id =proid;
+            int num = pronum;
+            int price = proprice;
+            totalprice = price * num;
+            sql = "update my_shopcart set cartgoodsCount = ?, totalPrice = ?  where goodsID=?;";
+            stmt = conn.prepareStatement(sql);
+            stmt.setInt(1, num);
+            stmt.setInt(2, totalprice);
+            stmt.setInt(3, id);
+            stmt.executeUpdate();
+            conn.commit();//提交
+            stmt.close();
+            conn.close();
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+    //清空购物车
+    public void clear(){
+        Connection conn = null;
+        PreparedStatement stmt = null;
+        ResultSet rs = null;
+        Product_clo clo = new Product_clo();
+        String sql = null;
+        ArrayList<Integer> list = new ArrayList();
+        try{
+            conn = getConnection();
+            conn.setAutoCommit(false);//将自动提交设为false
+            sql = "delete from my_shopcart;";
+            stmt = conn.prepareStatement(sql);
+            stmt.executeUpdate();
+            conn.commit();//提交
+            stmt.close();
+            //关闭数据库连接
+            conn.close();
+            //重定向到购物车页面
+        }catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
+}
+
+AddServlet.java:
+package buy;
+import java.io.*;
+import javax.servlet.*;
+import javax.servlet.http.*;
+
+import buy.ShoppingDAO;
+import buy.ShoppingDAOImpl;
+
+public class AddServlet extends HttpServlet{
+    public void doPost(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        request.setCharacterEncoding("UTF-8");
+        response.setContentType("text/html;charset=utf-8");
+        int proid = Integer.parseInt(request.getParameter("id"));//从购物页面获取的商品id
+        String propicture = request.getParameter("picture");
+        String proname = request.getParameter("name");
+        int proprice = Integer.parseInt(request.getParameter("price"));
+        //调用模型ShoppingDAO，获取用户角色
+        ShoppingDAO shoppingDAO=new ShoppingDAOImpl();
+        int cartid=0;
+        cartid=proid;
+        //cartid=shoppingDAO.cartId();
+        //调用add()函数添加到购物车
+        shoppingDAO.add(cartid,proid,propicture,proname,proprice);
+        //转发请求至购物车页面buy.jsp
+        RequestDispatcher requestDispatcher=request.getRequestDispatcher("shoppingCart.jsp");
+        requestDispatcher.forward(request,response);//把请求转发至服务器上的另一资源
+    }
+    public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        doPost(request,response);
+    }
+}
+
+ClearServlet.java:
+package buy;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import buy.*;
+
+public class ClearServlet extends HttpServlet {
+    public void doPost(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException {
+        //调用模型ShoppingDAO，获取用户角色
+        ShoppingDAO shoppingDAO=new ShoppingDAOImpl();
+        //调用add()函数添加到购物车
+        shoppingDAO.clear();
+        //转发请求至购物车页面shoppingCart.jsp
+        RequestDispatcher requestDispatcher=request.getRequestDispatcher("shoppingCart.jsp");
+        requestDispatcher.forward(request,response);//把请求转发至服务器上的另一资源
+    }
+    public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        doPost(request,response);
+    }
+
+}
+
+DeleteServlet.java:
+package buy;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import buy.*;
+
+public class DeleteServlet extends HttpServlet {
+    public void doPost(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException {
+        int proid = Integer.parseInt(request.getParameter("id"));//从购物页面获取的商品id
+        //调用模型ShoppingDAO，获取用户角色
+        ShoppingDAO shoppingDAO=new ShoppingDAOImpl();
+        //调用add()函数添加到购物车
+        shoppingDAO.delete(proid);
+        //转发请求至购物车页面buy.jsp
+        RequestDispatcher requestDispatcher=request.getRequestDispatcher("shoppingCart.jsp");
+        requestDispatcher.forward(request,response);//把请求转发至服务器上的另一资源
+    }
+    public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        doPost(request,response);
+    }
+}
+
+UpdateServlet.java:
+package buy;
+
+import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+
+import buy.*;
+
+public class UpdateServlet extends HttpServlet {
+    public void doPost(HttpServletRequest request, HttpServletResponse response)throws ServletException, IOException {
+        int proid = Integer.parseInt(request.getParameter("id"));//从购物页面获取的商品id
+        int pronum= Integer.parseInt(request.getParameter("num"));
+        int proprice = Integer.parseInt(request.getParameter("price"));
+        //调用模型ShoppingDAO，获取用户角色
+        ShoppingDAO shoppingDAO=new ShoppingDAOImpl();
+        //调用add()函数添加到购物车
+        shoppingDAO.update(proid,pronum,proprice);
+        //转发请求至购物车页面shoppingCart.jsp
+        RequestDispatcher requestDispatcher=request.getRequestDispatcher("shoppingCart.jsp");
+        requestDispatcher.forward(request,response);//把请求转发至服务器上的另一资源
+    }
+    public void doGet(HttpServletRequest request,HttpServletResponse response)throws ServletException,IOException{
+        doPost(request,response);
+    }
+
+}
+
+以及web.xml的配置：
+<servlet>
+        <servlet-name>addServlet</servlet-name>
+        <servlet-class>buy.AddServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>addServlet</servlet-name>
+        <url-pattern>/add</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>updateServlet</servlet-name>
+        <servlet-class>buy.UpdateServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>updateServlet</servlet-name>
+        <url-pattern>/update</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>deleteServlet</servlet-name>
+        <servlet-class>buy.DeleteServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>deleteServlet</servlet-name>
+        <url-pattern>/delete</url-pattern>
+    </servlet-mapping>
+
+    <servlet>
+        <servlet-name>clearServlet</servlet-name>
+        <servlet-class>buy.ClearServlet</servlet-class>
+    </servlet>
+    <servlet-mapping>
+        <servlet-name>clearServlet</servlet-name>
+        <url-pattern>/clear</url-pattern>
+    </servlet-mapping>
